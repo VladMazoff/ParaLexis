@@ -1,0 +1,459 @@
+/* vocabulary.css - ОПТИМИЗИРОВАННАЯ ВЕРСИЯ */
+/* Блокировка прокрутки при открытом модальном окне */
+body.vocabulary-modal-open {
+  overflow: hidden !important;
+}
+
+/* Плавающая кнопка */
+.vocabulary-floating-btn {
+  position: fixed;
+  z-index: 1000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0,0,0,0.1);
+  user-select: none;
+}
+
+.vocabulary-word-content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.vocabulary-floating-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+/* Модальное окно */
+.vocabulary-modal {
+  font-family: inherit;
+}
+
+.vocabulary-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  animation: vocabularyFadeIn 0.2s ease;
+}
+
+@keyframes vocabularyFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.vocabulary-modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  max-height: 60vh;
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: vocabularyModalIn 0.3s ease;
+}
+
+@keyframes vocabularyModalIn {
+  from { opacity: 0; transform: translate(-50%, -48%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.vocabulary-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 20px;
+  flex-shrink: 0;
+}
+
+.vocabulary-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.vocabulary-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.vocabulary-close-btn:hover {
+  background: #f8f9fa;
+  color: #dc3545;
+}
+
+.vocabulary-controls {
+  display: flex;
+}
+
+/* Кнопки управления */
+.vocabulary-clear-btn,
+.vocabulary-copy-btn,
+.vocabulary-sort-btn,
+.vocabulary-translate-all-btn {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  transition: all 0.2s;
+}
+
+.vocabulary-controls button:hover {
+  background: #e9ecef;
+}
+
+.vocabulary-clear-btn {
+  color: #dc3545;
+  border-color: #dc3545 !important;
+}
+
+.vocabulary-copy-btn {
+  color: #007bff;
+  border-color: #007bff !important;
+}
+
+.vocabulary-translate-all-btn {
+  color: #28a745;
+  border-color: #28a745 !important;
+}
+
+/* Эффекты при наведении на кнопки */
+.vocabulary-clear-btn:hover,
+.vocabulary-copy-btn:hover,
+.vocabulary-translate-all-btn:hover {
+  color: white !important;
+}
+
+.vocabulary-clear-btn:hover {
+  background: #dc3545 !important;
+}
+
+.vocabulary-copy-btn:hover {
+  background: #007bff !important;
+}
+
+.vocabulary-translate-all-btn:hover {
+  background: #28a745 !important;
+}
+
+/* Поле поиска */
+.vocabulary-search {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.vocabulary-search:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+/* Список слов */
+.vocabulary-list-container {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(60vh - 130px);
+  min-height: 100px;
+}
+
+.vocabulary-list {
+  min-height: 100%;
+}
+
+.vocabulary-item {
+  display: flex;
+  align-items: center;
+  padding: 5px 0px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.vocabulary-item:hover {
+  background: #f8f9fa;
+}
+
+/* Кнопка удаления слова */
+.vocabulary-remove-word {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.vocabulary-remove-word:hover,
+.vocabulary-remove-translation-btn:hover {
+  background: #ffeaea;
+  transform: scale(1.1);
+}
+
+/* Слово и перевод */
+.vocabulary-word {
+  color: #333;
+  cursor: pointer;
+  user-select: text;
+  flex: 1;
+  word-break: break-word;
+}
+
+.vocabulary-word:hover {
+  color: #007bff;
+}
+
+.vocabulary-translation {
+  cursor: pointer;
+}
+
+.vocabulary-translation:hover {
+  color: #007bff;
+}
+
+/* Действия с переводом */
+.vocabulary-translation-actions {
+  display: flex;
+  gap: 5px;
+  margin-left: 1px;
+}
+
+.vocabulary-translate-btn,
+.vocabulary-remove-translation-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+color: #dc3545;
+  padding: 0px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.vocabulary-translate-btn:hover {
+  background: #e9ecef;
+  transform: scale(1.1);
+}
+
+
+
+/* Состояние пустого списка */
+.vocabulary-empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Облако перевода */
+.vocabulary-translation-cloud {
+  position: fixed;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  padding: 15px;
+  z-index: 10001;
+  max-width: 300px;
+  animation: vocabularyCloudIn 0.3s ease;
+  cursor: default;
+  user-select: none;
+  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.2s ease;
+}
+
+@keyframes vocabularyCloudIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.translation-cloud-word {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  cursor: grab;
+  user-select: none;
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.translation-cloud-word:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.translation-cloud-word:active {
+  cursor: grabbing;
+  background-color: rgba(0, 123, 255, 0.2);
+}
+
+.vocabulary-translation-cloud.dragging {
+  opacity: 0.9;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+}
+
+.translation-cloud-translation {
+  font-size: 16px;
+  color: #28a745;
+  margin-bottom: 10px;
+}
+
+
+
+
+.translation-cloud-add-btn {
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  align-items: center;
+}
+
+/* Индикатор загрузки перевода */
+.vocabulary-translation-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: vocabularySpin 1s linear infinite;
+}
+
+@keyframes vocabularySpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============ ТЕМЫ ============ */
+
+/* Темная тема */
+body.theme-dark .vocabulary-floating-btn {
+  background: rgba(52, 58, 64, 0.95);
+  color: #f8f9fa;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-dark .vocabulary-modal-content,
+body.theme-dark .vocabulary-translation-cloud {
+  background: #343a40;
+  color: #f8f9fa;
+  border-color: #495057;
+}
+
+body.theme-dark .vocabulary-modal-header {
+  border-color: #495057;
+}
+
+body.theme-dark .vocabulary-modal-header h3,
+body.theme-dark .vocabulary-word {
+  color: #f8f9fa;
+}
+
+body.theme-dark .vocabulary-controls {
+  background: #2d3338;
+  border-color: #495057;
+}
+
+body.theme-dark .vocabulary-controls button,
+body.theme-dark .vocabulary-search {
+  background: #495057;
+  border-color: #6c757d;
+  color: #f8f9fa;
+}
+
+body.theme-dark .vocabulary-controls button:hover,
+body.theme-dark .vocabulary-translate-btn:hover {
+  background: #565e64;
+}
+
+body.theme-dark .vocabulary-search::placeholder,
+body.theme-dark .vocabulary-translation,
+body.theme-dark .vocabulary-empty-state {
+  color: #adb5bd;
+}
+
+body.theme-dark .vocabulary-item {
+  border-color: #495057;
+}
+
+body.theme-dark .vocabulary-item:hover {
+  background: #3d4449;
+}
+
+
+
+body.theme-dark .translation-cloud-add-btn {
+  background: #87d99b;
+  color: #212529;
+}
+
+/* Нейтральная тема */
+body.theme-neutral .vocabulary-floating-btn {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: #e0e0e0;
+  color: #37474f;
+}
+
+body.theme-neutral .vocabulary-modal-content,
+body.theme-neutral .vocabulary-translation-cloud {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+/* Анимации для уведомлений (нужны для JS) */
+@keyframes vocabularyToastIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vocabularyToastOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(20px); }
+}

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Караоке Плеер — ParaLexis 1.2</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- ФИКСИРОВАННЫЙ ПЛЕЕР -->
+    <div id="playerContainer">
+        <!-- ПОЛНЫЙ РЕЖИМ -->
+        <div class="full-controls">
+            <div class="file-controls">
+                <button class="menu-btn" id="menuBtn">≡ Меню</button>
+                <div class="control-block">
+                    <div class="speed-slider-container">
+                        <input type="range" class="slider" id="speedSlider" min="0.6" max="1.5" step="0.1" value="1">
+                        <span id="speedValue" class="speed-value">1x</span>
+                    </div>
+                    <div class="config-item" id="configMode">
+                        <div class="config-label">
+                            <span>Режим <span class="config-alias">(Новичок)</span></span>
+                        </div>
+                        <div class="config-popup">
+                            <div class="popup-item">
+                                <div class="mode-btns">
+                                    <button class="mode-btn" data-mode="pro">1</button>
+                                    <button class="mode-btn" data-mode="hint">2</button>
+                                    <button class="mode-btn active" data-mode="beginner">3</button>
+                                </div>
+                                <div class="mode-properties" id="configModeProperties">
+                                    <div class="mode-property">
+                                        <span class="property-label">Перевод:</span>
+                                        <div class="checkbox checked" id="configPropertyTranslate"></div>
+                                    </div>
+                                    <div class="mode-property">
+                                        <span class="property-label">Заметка:</span>
+                                        <div class="checkbox checked" id="configPropertyNote"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="theme-block">
+                        <button class="theme-btn" data-theme="light">🌞</button>
+                        <button class="theme-btn" data-theme="dark">🌙</button>
+                        <button class="theme-btn" data-theme="neutral">⚡</button>
+                    </div>
+                </div>
+                <button id="toggleCompactBtn" class="compact-btn">Свернуть ↑</button>
+            </div>
+            <div class="playback-controls">
+                <button id="playPauseBtn" class="play-pause-btn">▶</button>
+                <div class="time-container">
+                    <span id="currentTime" class="time-current">0:00</span>
+                    <span id="duration" class="time-duration">0:00</span>
+                </div>
+                <div class="progress-container">
+                    <input type="range" id="progress" min="0" max="100" value="0" style="width: 100%;" />
+                </div>
+            </div>
+        </div>
+        <div class="compact-controls">
+            <button id="playPauseBtnCompact" class="play-pause-btn">▶</button>
+            <div class="compact-time-container">
+                <span id="currentTimeCompact" class="time-current">0:00</span>
+                <span id="durationCompact" class="time-duration">0:00</span>
+            </div>
+            <div class="progress-container">
+                <input type="range" id="progressCompact" min="0" max="100" value="0" style="width: 100%;" />
+            </div>
+            <button id="toggleCompactBtnCompact" class="compact-compact-btn">↓</button>
+        </div>
+        <audio id="audioPlayer" preload="metadata"></audio>
+        <input type="file" id="audioFile" accept="audio/*" style="display:none" />
+        <input type="file" id="lyricsFile" accept=".txt" style="display:none" />
+        <div id="dropdownMenu" class="dropdown-menu">
+            <button class="dropdown-item" id="dropdownMedia">🎵 Медиа</button>
+            <button class="dropdown-item" id="dropdownText">📝 Текст</button>
+            <button class="dropdown-item" id="dropdownEdit">⚡ Разметка</button>
+            <button class="dropdown-item" id="dropdownSettings">⚙️ Настройки</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-content">
+            <h3>Настройки караоке</h3>
+            <div class="settings-group">
+                <label for="repeatCount">Количество повторений:</label>
+                <input type="number" id="repeatCount" min="1" max="10" value="5" />
+            </div>
+            <div class="settings-group">
+                <label for="continueAfterRepeat">
+                    <input type="checkbox" id="continueAfterRepeat" /> Продолжить воспроизведение после повторов
+                </label>
+            </div>
+            <div class="settings-group">
+                <label for="fontSize">Размер шрифта:</label>
+                <select id="fontSize">
+                    <option value="14px">Маленький (14px)</option>
+                    <option value="16px" selected>Средний (16px)</option>
+                    <option value="18px">Большой (18px)</option>
+                    <option value="20px">Очень большой (20px)</option>
+                    <option value="22px">Гигантский (22px)</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <label for="fontFamily">Шрифт:</label>
+                <select id="fontFamily">
+                    <option value="Arial, sans-serif" selected>Arial</option>
+                    <option value="'Times New Roman', serif">Times New Roman</option>
+                    <option value="'Courier New', monospace">Courier New</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <label for="activeLineColor">Цвет активной строки:</label>
+                <input type="color" id="activeLineColor" value="#4CAF50" />
+            </div>
+            <div class="settings-group">
+                <label for="backgroundColor">Цвет фона:</label>
+                <input type="color" id="backgroundColor" value="#f4f4f4" />
+            </div>
+            <div class="settings-group">
+                <label for="textColor">Цвет текста:</label>
+                <input type="color" id="textColor" value="#333333" />
+            </div>
+            <div class="settings-buttons">
+                <button id="saveSettings" style="background:#28a745;color:white;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;">Сохранить</button>
+                <button id="closeSettings" style="background:#6c757d;color:white;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Содержимое -->
+    <div id="mainContent">
+        <div style="max-width: 900px; margin: 0 auto;">
+            <div id="lyricsDisplay"></div>
+        </div>
+    </div>
+
+    <!-- Редактор -->
+    <div id="editorControls" style="display: none;">
+        <div class="editor-controls-panel editor-row-1">
+            <button id="editorBackBtn" class="editor-back-btn">← Назад</button>
+            <div class="editor-playback-controls">
+                <button id="editorPlayBtn" class="editor-play-btn">▶</button>
+                <span id="editorTimeDisplay" class="editor-time-display">0:00 / 0:00</span>
+            </div>
+        </div>
+        <div id="waveformContainer">
+            <canvas id="waveformCanvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Скрипты в правильном порядке -->
+    <script src="core/app.js"></script>
+    <script src="core/player.js"></script>
+    <script src="data/storage.js"></script>
+    <script src="data/lyrics-parser.js"></script>
+    <script src="ui/lyrics-renderer.js"></script>
+    <script src="ui/ui-manager.js"></script>
+    <script src="ui/config-manager.js"></script>
+    <script src="features/waveform.js"></script>
+    <script src="features/editor.js"></script>
+    <script src="main.js"></script>
+    
+        <!-- Vocabulary (внешние скрипты) -->
+    <link rel="stylesheet" href="vocabulary/vocabulary.css">
+    <script src="vocabulary/vocabulary-core.js"></script>
+    <script src="vocabulary/vocabulary-ui.js"></script>
+    <script src="vocabulary/vocabulary-integration.js"></script>
+</body>
+</html>
