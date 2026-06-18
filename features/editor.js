@@ -10,11 +10,35 @@ App.Editor = {
         App.EventBus.on('editor:deactivate-line', ({ lineEl }) => this.deactivateLine(lineEl));
         App.EventBus.on('editor:mark-added', ({ time }) => this.lastTimestamp = time);
         App.EventBus.on('editor:add-mark', () => this.addTimestampMark());
-
+        this.setupEditorToggle();
+        
+        console.log('✅ Editor initialized');
         this.setupKeyboard();
         this.setupContextMenu();
         console.log('✅ Editor initialized');
     },
+
+    setupEditorToggle() {
+        const editorBtn = document.getElementById('toggleEditorBtn');
+        editorBtn?.addEventListener('click', () => {
+            const isEditorMode = !App.Store.state.isEditorMode;
+            App.Store.updateState({ isEditorMode });
+            
+            const editorControls = document.getElementById('editorControls');
+            if (editorControls) {
+                editorControls.style.display = isEditorMode ? 'block' : 'none';
+            }
+            
+            // Если открыли редактор и есть аудио - пробуем загрузить waveform
+            if (isEditorMode && App.Player.audio.src) {
+                // Даём время на отображение контейнера
+                setTimeout(() => {
+                    App.Waveform.scheduleLoad(App.Player.audio.src);
+                }, 100);
+            }
+        });
+    },
+
 
     toggle() {
         this.isEditorMode = !this.isEditorMode;

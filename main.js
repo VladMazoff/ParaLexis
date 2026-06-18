@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupFileInputs();
     setupProgressSync();
     setupModeSelector();
-    setupWaveformRetry();  // ← Исправление: ожидание peaks.js
+ 
 
     console.log('🎵 Karaoke Player ready');
 });
@@ -156,32 +156,19 @@ function setupModeSelector() {
     });
 }
 
-// === ИСПРАВЛЕНИЕ: Ожидание загрузки peaks.js ===
-function setupWaveformRetry() {
-    let attempts = 0;
-    const maxAttempts = 50; // 5 секунд максимум
 
-    const checkPeaks = () => {
-        attempts++;
-
-        if (typeof peaks !== 'undefined' && App.Waveform?.pendingLoad) {
-            console.log('🔄 Peaks.js доступен, загружаем waveform...');
-            App.Waveform.scheduleLoad(App.Waveform.pendingLoad);
-            return;
-        }
-
-        if (attempts < maxAttempts && App.Waveform?.pendingLoad) {
-            setTimeout(checkPeaks, 100);
-        } else if (attempts >= maxAttempts) {
-            console.warn('⚠️ Peaks.js не загрузился за 5 секунд');
-            App.Waveform?.showFallback('Peaks.js не загружен');
-        }
-    };
-
-    // Запускаем проверку после полной загрузки страницы
-    if (document.readyState === 'complete') {
-        setTimeout(checkPeaks, 50);
-    } else {
-        window.addEventListener('load', () => setTimeout(checkPeaks, 50));
+// В конце main.js
+window.__debug = {
+    waveform: () => {
+        console.log('Waveform state:', {
+            isPeaksReady: App.Waveform.isPeaksReady,
+            pendingLoad: App.Waveform.pendingLoad,
+            retryCount: App.Waveform.retryCount,
+            isEditorMode: App.Store.state.isEditorMode,
+            container: !!document.getElementById('waveformContainer'),
+            audioSrc: App.Player.audio?.src
+        });
     }
-}
+};
+
+
