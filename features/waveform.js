@@ -53,11 +53,14 @@ App.Waveform = {
         });
     },
 
-    waitForContainer(container, callback, attempts = 0) {
+   waitForContainer(container, callback, attempts = 0) {
         const maxAttempts = 20;
         const rect = container.getBoundingClientRect();
         
-        const isVisible = container.style.display !== 'none' && 
+        // Используем getComputedStyle для корректной проверки скрытых через CSS классов
+        const computedStyle = window.getComputedStyle(container);
+        const isVisible = computedStyle.display !== 'none' && 
+                         computedStyle.visibility !== 'hidden' &&
                          container.offsetParent !== null;
         const hasSize = rect.width > 0 && rect.height > 0;
         
@@ -68,12 +71,11 @@ App.Waveform = {
         
         if (attempts >= maxAttempts) {
             console.warn('Waveform: контейнер не получил размеры после ожидания');
-            // Всё равно пробуем загрузить
             callback();
             return;
         }
         
-        if (container.style.display === 'none') {
+        if (computedStyle.display === 'none') {
             container.style.display = 'block';
             container.style.visibility = 'hidden';
             void container.offsetHeight;
@@ -83,6 +85,71 @@ App.Waveform = {
             this.waitForContainer(container, callback, attempts + 1);
         }, 100);
     },
+
+    setupWaveformContainer() {
+        const container = document.getElementById('waveformContainer');
+        if (!container) return;
+        
+        // 🟢 ВОССТАНОВЛЕНИЕ ВИДИМОСТИ (Критично для верстки!)
+        if (container.style.visibility === 'hidden') {
+            container.style.visibility = 'visible';
+        }
+        
+        // 🟢 ДИНАМИЧЕСКИЙ РАСЧЕТ ВЫСОТЫ (как в оригинале)
+        const parentContainer = document.querySelector('.editor-controls-panel.editor-row-2');
+        const containerHeight = parentContainer ? parentContainer.offsetHeight : 120;
+        
+        const zoomviewHeight = Math.floor(containerHeight * 0.7);
+        const overviewHeight = Math.floor(containerHeight * 0.3);
+        
+        container.style.cssText = `
+            width: 100%; 
+            height: ${containerHeight}px; 
+            max-width: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative;
+        `;
+        
+        container.innerHTML = [
+            `<div class="waveform-section zoomview-section" style="width: 100%; height: ${zoomviewHeight}px; flex: 0 0 ${zoomviewHeight}px; min-height: ${zoomviewHeight}px;">`,
+            '<div id="zoomview-container" style="width: 100%; height: 100%; background: #f0f0f0; display: block;"></div>',
+            '</div>',
+            `<div class="waveform-section overview-section" style="width: 100%; height: ${overviewHeight}px; flex: 0 0 ${overviewHeight}px; min-height: ${overviewHeight}px; border-top: 1px solid #ccc;">`,
+            '<div id="overview-container" style="width: 100%; height: 100%; background: #e8e8e8; display: block;"></div>',
+            '</div>'
+        ].join('');
+    },
+
+    createFallbackWaveform(message) {
+        const container = document.getElementById('waveformContainer');
+        if (!container) return;
+        
+        // 🟢 ВОССТАНОВЛЕНИЕ ВИДИМОСТИ
+        if (container.style.visibility === 'hidden') {
+            container.style.visibility = 'visible';
+        }
+
+        // 🟢 ДИНАМИЧЕСКАЯ ВЫСОТА
+        const parentContainer = document.querySelector('.editor-controls-panel.editor-row-2');
+        const containerHeight = parentContainer ? parentContainer.offsetHeight : 120;
+        
+        const duration = App.Player.audio ? App.Player.formatTime(App.Player.audio.duration || 0) : '0:00';
+        
+        container.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: ${containerHeight}px; background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; border-radius: 4px; width: 100%;">
+                <div style="text-align: center;">
+                    <div>${message}</div>
+                    <small>Длительность: ${duration}</small>
+                </div>
+            </div>
+        `;
+    },
+
+
 
     // ==================== ПРОГРЕССИВНАЯ ЗАГРУЗКА ====================
 

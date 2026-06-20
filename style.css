@@ -698,7 +698,7 @@ body.compact-mode #lyricsDisplay {
     justify-content: space-between;
     align-items: stretch;
     min-height: 80px;
-    height: 100px;
+  
 }
 
 .playback-section {
@@ -926,7 +926,7 @@ background: #4478fe;
     }
     
     .editor-controls-panel { flex-wrap: wrap; }
-    .editor-row-2 { height: 80px; }
+ 
     .waveform-main { margin: 0 5px; min-height: 60px; }
     .waveform-controls { min-width: 60px; }
     .editor-time-display { font-size: 10px; }

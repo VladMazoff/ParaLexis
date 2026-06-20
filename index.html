@@ -6,8 +6,10 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+	
     <!-- ФИКСИРОВАННЫЙ ПЛЕЕР -->
     <div id="playerContainer">
+		
         <!-- ПОЛНЫЙ РЕЖИМ -->
         <div class="full-controls">
             <div class="file-controls">
@@ -71,6 +73,49 @@
             </div>
             <button id="toggleCompactBtnCompact" class="compact-compact-btn">↓</button>
         </div>
+        
+        <!-- ✅ РЕДАКТОР (Перенесён внутрь playerContainer, сразу после compact-controls) -->
+        <div id="editorControls" style="display: none;">
+            <!-- Первая строка: Назад + Меню -->
+            <div class="editor-controls-panel editor-row-1">
+                <button id="editorBackBtn" class="editor-back-btn">← Назад</button>
+                <div class="editor-menu-container">
+                    <!-- ... кнопки меню ... -->
+                </div>
+            </div>
+
+            <!-- Вторая строка: Плеер + Волновая форма -->
+            <div class="editor-controls-panel editor-row-2">
+                <div class="playback-section">
+                    <button id="editorPlayBtn" class="editor-play-btn">▶</button>
+                    <button id="editorMarkBtn" class="editor-mark-btn">📍 Метка</button>
+                </div>
+                
+                <!-- ✅ WAVEFORM (Внутри editor-row-2) -->
+                <div id="waveformContainer" class="waveform-main">
+                    <div class="waveform-section zoomview-section">
+                        <div id="zoomview-container"></div>
+                    </div>
+                    <div class="waveform-section overview-section">
+                        <div id="overview-container"></div>
+                    </div>
+                </div>
+
+                <!-- Управление waveform -->
+                <div class="waveform-controls">
+                    <div class="waveform-zoom-controls">
+                        <button class="waveform-btn">➖</button>
+                        <button class="waveform-btn">➕</button>
+                    </div>
+                    <div class="waveform-amplitude-controls">
+                        <button class="waveform-btn">📉</button>
+                        <button class="waveform-btn">📈</button>
+                    </div>
+                    <span id="editorTimeDisplay" class="editor-time-display">0:00 / 0:00</span>
+                </div>
+            </div>
+        </div>
+
         <audio id="audioPlayer" preload="metadata"></audio>
         <input type="file" id="audioFile" accept="audio/*" style="display:none" />
         <input type="file" id="lyricsFile" accept=".txt" style="display:none" />
@@ -80,6 +125,8 @@
             <button class="dropdown-item" id="dropdownEdit">⚡ Разметка</button>
             <button class="dropdown-item" id="dropdownSettings">⚙️ Настройки</button>
         </div>
+        
+        <!-- Старый контейнер вейвформы удалён, теперь он внутри editorControls -->
     </div>
 
     <!-- Модальное окно настроек -->
@@ -141,20 +188,6 @@
         </div>
     </div>
 
-    <!-- Редактор -->
-    <div id="editorControls" style="display: none;">
-        <div class="editor-controls-panel editor-row-1">
-            <button id="editorBackBtn" class="editor-back-btn">← Назад</button>
-            <div class="editor-playback-controls">
-                <button id="editorPlayBtn" class="editor-play-btn">▶</button>
-                <span id="editorTimeDisplay" class="editor-time-display">0:00 / 0:00</span>
-            </div>
-        </div>
-        <div id="waveformContainer">
-            <canvas id="waveformCanvas"></canvas>
-        </div>
-    </div>
-
     <!-- Скрипты в правильном порядке -->
     <script src="libs/peaks.js"></script>
     <script src="core/app.js"></script>
@@ -168,7 +201,7 @@
     <script src="features/editor.js"></script>
     <script src="main.js"></script>
     
-        <!-- Vocabulary (внешние скрипты) -->
+    <!-- Vocabulary (внешние скрипты) -->
     <link rel="stylesheet" href="vocabulary/vocabulary.css">
     <script src="vocabulary/vocabulary-core.js"></script>
     <script src="vocabulary/vocabulary-ui.js"></script>
