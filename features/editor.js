@@ -3,29 +3,37 @@ App.Editor = {
     isEditorMode: false,
     lastTimestamp: null,
     magnetEnabled: true,
-    waveform: null, // Добавляем ссылку на waveform
+    waveform: null, // Ссылка на объект waveform
 
     init() {
+        // Обработчики событий шины
         App.EventBus.on('editor:toggle', () => this.toggle());
         App.EventBus.on('editor:activate-line', ({ index, lineEl }) => this.activateLine(index, lineEl));
         App.EventBus.on('editor:deactivate-line', ({ lineEl }) => this.deactivateLine(lineEl));
         App.EventBus.on('editor:mark-added', ({ time }) => this.lastTimestamp = time);
         App.EventBus.on('editor:add-mark', () => this.addTimestampMark());
         
+        // Привязка событий к UI элементам
+        this.bindEditorEvents();
+        
+        // Настройка остальных функций
         this.setupEditorToggle();
         this.setupKeyboard();
         this.setupContextMenu();
-        this.bindEditorEvents(); // 👈 Добавляем привязку событий
         
         console.log('✅ Editor initialized');
     },
 
-    // ==================== НОВЫЙ МЕТОД: ПРИВЯЗКА СОБЫТИЙ ====================
+    // ==================== ПРИВЯЗКА СОБЫТИЙ К UI ====================
     bindEditorEvents() {
         // 1. Кнопка "Назад" (выход из режима редактора)
         const backBtn = document.getElementById('editorBackBtn');
         if (backBtn) {
-            backBtn.addEventListener('click', () => this.toggle());
+            backBtn.addEventListener('click', () => {
+                if (this.isEditorMode) {
+                    this.toggle();
+                }
+            });
         }
 
         // 2. Выпадающее меню редактора (делегирование событий)
@@ -36,7 +44,8 @@ App.Editor = {
             // Открытие/закрытие самого меню
             editorMenuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                editorDropdown.style.display = editorDropdown.style.display === 'none' ? 'block' : 'none';
+                const isHidden = editorDropdown.style.display === 'none' || !editorDropdown.style.display;
+                editorDropdown.style.display = isHidden ? 'block' : 'none';
             });
 
             // Обработка кликов по пунктам меню
@@ -44,7 +53,7 @@ App.Editor = {
                 const btn = e.target.closest('.menu-btn');
                 if (btn && btn.dataset.action) {
                     this.handleMenuAction(btn.dataset.action);
-                    editorDropdown.style.display = 'none'; // Скрываем меню после выбора
+                    editorDropdown.style.display = 'none';
                 }
             });
         }
@@ -56,14 +65,24 @@ App.Editor = {
                 const btn = e.target.closest('.waveform-btn');
                 if (!btn) return;
                 
-                // Определяем действие по data-action атрибуту
                 const action = btn.dataset.action;
-                switch (action) {
-                    case 'zoom-in': this.handleZoomIn(); break;
-                    case 'zoom-out': this.handleZoomOut(); break;
-                    case 'amp-up': this.handleAmplitudeUp(); break;
-                    case 'amp-down': this.handleAmplitudeDown(); break;
-                    default: console.warn(`[Editor] Неизвестное действие: ${action}`);
+                if (action) {
+                    switch (action) {
+                        case 'zoom-in': this.handleZoomIn(); break;
+                        case 'zoom-out': this.handleZoomOut(); break;
+                        case 'amp-up': this.handleAmplitudeUp(); break;
+                        case 'amp-down': this.handleAmplitudeDown(); break;
+                        default: console.warn(`[Editor] Неизвестное действие: ${action}`);
+                    }
+                } else {
+                    // Fallback на текст кнопки
+                    const text = btn.textContent.trim();
+                    switch (text) {
+                        case '➕': this.handleZoomIn(); break;
+                        case '➖': this.handleZoomOut(); break;
+                        case '📈': this.handleAmplitudeUp(); break;
+                        case '📉': this.handleAmplitudeDown(); break;
+                    }
                 }
             });
         }
@@ -72,8 +91,7 @@ App.Editor = {
         const editorPlayBtn = document.getElementById('editorPlayBtn');
         if (editorPlayBtn) {
             editorPlayBtn.addEventListener('click', () => {
-                // Вызываем глобальный плеер
-                if (App.Player && App.Player.togglePlay) {
+                if (App.Player && typeof App.Player.togglePlay === 'function') {
                     App.Player.togglePlay();
                 } else {
                     App.EventBus.emit('player:toggle-play');
@@ -84,7 +102,7 @@ App.Editor = {
         const editorMarkBtn = document.getElementById('editorMarkBtn');
         if (editorMarkBtn) {
             editorMarkBtn.addEventListener('click', () => {
-                this.addTimestampMark(); // Добавляем метку
+                this.addTimestampMark();
             });
         }
         
@@ -94,136 +112,139 @@ App.Editor = {
                 editorDropdown.style.display = 'none';
             }
         });
-
-        // 6. Кнопка магнита (если есть отдельная)
-        const magnetBtn = document.getElementById('toggleMagnetBtn');
-        if (magnetBtn) {
-            magnetBtn.addEventListener('click', () => this.toggleMagnet());
-        }
-
-        // 7. Кнопка сохранения/экспорта
-        const saveBtn = document.getElementById('exportLyricsBtn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.exportLyrics());
-        }
     },
 
     // ==================== ОБРАБОТКА ДЕЙСТВИЙ МЕНЮ ====================
     handleMenuAction(action) {
         const actions = {
             'toggleMagnet': () => this.toggleMagnet(),
-            'clrTextFormat': () => this.clearTextFormat(),
+            'clrTextFormat': () => this.clearTextFormatting(),
             'splitDot': () => this.splitTextBy('.'),
             'splitComma': () => this.splitTextBy(','),
-            'clearMarks': () => this.clearAllMarks(),
-            'audioAnalyze': () => this.analyzeAudioPauses(),
+            'clearMarks': () => this.clearTimeMarks(),
+            'audioAnalyze': () => this.analyzeAudio(),
             'saveToFile': () => this.exportLyrics(),
-            'cancelOperation': () => this.cancelOperation(),
-            // Добавьте сюда другие действия, если они есть
+            'cancelOperation': () => this.cancelCurrentOperation(),
         };
         
         if (actions[action]) {
             actions[action]();
         } else {
             console.warn(`[Editor] Действие '${action}' не реализовано`);
+            this.showNotification(`⚠️ Действие "${action}" не реализовано`, 'warning');
         }
     },
 
     // ==================== WAVEFORM КОНТРОЛЫ ====================
-    handleZoomIn() {
-        // Используем App.Waveform вместо this.waveform
-        if (App.Waveform && typeof App.Waveform.zoomIn === 'function') {
-            App.Waveform.zoomIn();
-        } else {
-            console.warn('[Editor] Waveform не доступен для zoomIn');
-        }
-    },
 
-    handleZoomOut() {
-        if (App.Waveform && typeof App.Waveform.zoomOut === 'function') {
-            App.Waveform.zoomOut();
-        } else {
-            console.warn('[Editor] Waveform не доступен для zoomOut');
-        }
-    },
 
-    handleAmplitudeUp() {
-        if (App.Waveform && typeof App.Waveform.adjustAmplitude === 'function') {
-            App.Waveform.adjustAmplitude(1.2);
-        } else {
-            console.warn('[Editor] Waveform не доступен для adjustAmplitude');
-        }
-    },
-
-    handleAmplitudeDown() {
-        if (App.Waveform && typeof App.Waveform.adjustAmplitude === 'function') {
-            App.Waveform.adjustAmplitude(0.8);
-        } else {
-            console.warn('[Editor] Waveform не доступен для adjustAmplitude');
-        }
-    },
-
-    // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+handleZoomIn() {
+    const waveformInstance = this.waveform;
     
-    clearTextFormat() {
-        // Очистка форматирования текста
+    if (waveformInstance && typeof waveformInstance.zoomIn === 'function') {
+        waveformInstance.zoomIn();
+        console.log('[Editor] Zoom In');
+        this.showNotification('🔍 Масштаб увеличен', 'success');
+    } else {
+        console.warn('[Editor] Waveform not available for zoom in');
+        this.showNotification('⚠️ Волновая форма не загружена', 'warning');
+    }
+},
+
+handleZoomOut() {
+    const waveformInstance = this.waveform;
+    
+    if (waveformInstance && typeof waveformInstance.zoomOut === 'function') {
+        waveformInstance.zoomOut();
+        console.log('[Editor] Zoom Out');
+        this.showNotification('🔍 Масштаб уменьшен', 'success');
+    } else {
+        console.warn('[Editor] Waveform not available for zoom out');
+        this.showNotification('⚠️ Волновая форма не загружена', 'warning');
+    }
+},
+
+handleAmplitudeUp() {
+    const waveformInstance = this.waveform;
+    
+    if (waveformInstance && typeof waveformInstance.adjustAmplitude === 'function') {
+        waveformInstance.adjustAmplitude(1.2);
+        console.log('[Editor] Amplitude Up');
+        this.showNotification('🔊 Амплитуда увеличена', 'success');
+    } else {
+        console.warn('[Editor] Waveform not available for amplitude adjustment');
+        this.showNotification('⚠️ Волновая форма не загружена', 'warning');
+    }
+},
+
+handleAmplitudeDown() {
+    const waveformInstance = this.waveform;
+    
+    if (waveformInstance && typeof waveformInstance.adjustAmplitude === 'function') {
+        waveformInstance.adjustAmplitude(0.8);
+        console.log('[Editor] Amplitude Down');
+        this.showNotification('🔊 Амплитуда уменьшена', 'success');
+    } else {
+        console.warn('[Editor] Waveform not available for amplitude adjustment');
+        this.showNotification('⚠️ Волновая форма не загружена', 'warning');
+    }
+},
+    // ==================== ДОПОЛНИТЕЛЬНЫЕ МЕТОДЫ ДЛЯ МЕНЮ ====================
+    clearTextFormatting() {
         App.Store.lines.forEach(line => {
             if (line.text) {
-                line.text = line.text.replace(/<[^>]*>/g, '').trim();
+                line.text = line.text.replace(/<[^>]*>/g, '');
             }
         });
         App.Store.setLines([...App.Store.lines]);
-        App.UIManager.showNotification('Форматирование очищено', 'success');
+        this.showNotification('🧹 Форматирование очищено', 'success');
     },
 
     splitTextBy(separator) {
+        if (!separator) return;
+        
         const newLines = [];
         App.Store.lines.forEach(line => {
-            if (line.text && line.text.includes(separator)) {
-                const parts = line.text.split(separator);
-                parts.forEach((part, i) => {
-                    if (part.trim()) {
-                        newLines.push({
-                            time: i === 0 ? line.time : -1,
-                            text: part.trim() + (i < parts.length - 1 ? separator : '')
-                        });
-                    }
+            if (line.text.includes(separator)) {
+                const parts = line.text.split(separator).filter(p => p.trim());
+                parts.forEach((part, index) => {
+                    newLines.push({
+                        time: index === 0 ? line.time : -1,
+                        text: part.trim() + (index < parts.length - 1 ? separator : '')
+                    });
                 });
             } else {
                 newLines.push({ ...line });
             }
         });
+        
         App.Store.setLines(newLines);
-        App.UIManager.showNotification(`Разбито по "${separator}"`, 'success');
+        this.showNotification(`✂️ Разделено по "${separator}"`, 'success');
     },
 
-    clearAllMarks() {
-        // Очистка всех временных меток
-        App.Store.lines.forEach(line => line.time = -1);
+    clearTimeMarks() {
+        App.Store.lines.forEach(line => {
+            line.time = -1;
+        });
         App.Store.setLines([...App.Store.lines]);
-        
-        if (App.Waveform && typeof App.Waveform.clearAllMarks === 'function') {
-            App.Waveform.clearAllMarks();
-        }
-        
-        App.UIManager.showNotification('Все метки удалены', 'success');
+        this.lastTimestamp = null;
+        this.showNotification('🗑️ Временные метки удалены', 'success');
     },
 
-    analyzeAudioPauses() {
-        // Анализ пауз в аудио (заглушка)
-        App.UIManager.showNotification('Анализ аудио...', 'info');
-        // Здесь можно добавить реальную логику анализа
+    analyzeAudio() {
+        this.showNotification('⏳ Анализ аудио...', 'info');
+        // Здесь должна быть логика анализа
         setTimeout(() => {
-            App.UIManager.showNotification('Анализ завершен', 'success');
+            this.showNotification('✅ Анализ завершён', 'success');
         }, 1500);
     },
 
-    cancelOperation() {
-        App.UIManager.showNotification('Операция отменена', 'info');
+    cancelCurrentOperation() {
+        this.showNotification('❌ Операция отменена', 'warning');
+        document.querySelectorAll('.line-editing').forEach(el => this.deactivateLine(el));
     },
 
-    // ==================== СУЩЕСТВУЮЩИЕ МЕТОДЫ ====================
-
+    // ==================== ОСНОВНЫЕ МЕТОДЫ РЕДАКТОРА ====================
     setupEditorToggle() {
         const editorBtn = document.getElementById('toggleEditorBtn');
         editorBtn?.addEventListener('click', () => {
@@ -235,10 +256,23 @@ App.Editor = {
                 editorControls.style.display = isEditorMode ? 'block' : 'none';
             }
             
-            // Если открыли редактор и есть аудио - пробуем загрузить waveform
+            // При открытии редактора инициализируем waveform
             if (isEditorMode && App.Player.audio.src) {
                 setTimeout(() => {
-                    App.Waveform.scheduleLoad(App.Player.audio.src);
+                    // Сначала пробуем получить waveform через App.Waveform
+                    if (App.Waveform && typeof App.Waveform.scheduleLoad === 'function') {
+                        App.Waveform.scheduleLoad(App.Player.audio.src);
+                        // Сохраняем ссылку на waveform из App.Waveform
+                        setTimeout(() => {
+                            if (App.Waveform.instance) {
+                                this.waveform = App.Waveform.instance;
+                                console.log('[Editor] Waveform instance attached');
+                            }
+                        }, 200);
+                    } else {
+                        // Или инициализируем через собственный метод
+                        this.initWaveform();
+                    }
                 }, 100);
             }
         });
@@ -256,6 +290,13 @@ App.Editor = {
             if (editorControls) editorControls.style.display = 'block';
             this.updatePlayerHeight();
             App.LyricsRenderer.render(App.Store.lines);
+            
+            // Инициализируем waveform при открытии
+            if (App.Player.audio && App.Player.audio.src) {
+                setTimeout(() => {
+                    this.initWaveform();
+                }, 200);
+            }
         } else {
             player.classList.remove('editor-mode');
             if (editorControls) editorControls.style.display = 'none';
@@ -266,16 +307,65 @@ App.Editor = {
     updatePlayerHeight() {
         const player = document.getElementById('playerContainer');
         if (!player) return;
-        player.style.height = 'auto'; 
+        player.style.height = 'auto';
     },
 
     restorePlayerHeight() {
         const player = document.getElementById('playerContainer');
         if (!player) return;
-        player.style.height = 'auto'; 
+        player.style.height = 'auto';
+    },
+
+initWaveform() {
+    if (!App.Player?.audio?.src) {
+        console.warn('[Editor] No audio source for waveform');
+        return;
+    }
+
+    // Если уже есть waveform в App.Waveform - используем его
+    if (App.Waveform && typeof App.Waveform.init === 'function') {
+        this.waveform = App.Waveform; // Сохраняем ссылку на модуль
+        console.log('[Editor] Waveform instance obtained from App.Waveform');
+        return;
+    }
+
+        // Если waveform уже создан локально, обновляем его
+        if (this.waveform) {
+            if (typeof this.waveform.updateAudio === 'function') {
+                this.waveform.updateAudio(App.Player.audio.src);
+            }
+            return;
+        }
+
+        const container = document.getElementById('waveformContainer');
+        const canvas = document.getElementById('waveformCanvas');
+        
+        if (!container || !canvas) {
+            console.error('[Editor] Waveform container or canvas not found');
+            return;
+        }
+
+        // Проверяем, загружен ли модуль
+        if (typeof WaveformModule !== 'undefined') {
+            try {
+                this.waveform = new WaveformModule(App.Player);
+                if (typeof this.waveform.setContainer === 'function') {
+                    this.waveform.setContainer(container, canvas);
+                }
+                console.log('[Editor] Waveform initialized successfully');
+            } catch (error) {
+                console.error('[Editor] Failed to initialize waveform:', error);
+                this.showNotification('Ошибка инициализации волновой формы', 'error');
+            }
+        } else {
+            console.warn('[Editor] WaveformModule not available');
+            this.showNotification('Модуль волновой формы не загружен', 'warning');
+        }
     },
 
 
+
+    // ==================== РАБОТА СО СТРОКАМИ ====================
     activateLine(index, lineEl) {
         document.querySelectorAll('.line-editing').forEach(el => this.deactivateLine(el));
 
@@ -393,6 +483,7 @@ App.Editor = {
         }, 10);
     },
 
+    // ==================== РАБОТА С МЕТКАМИ ВРЕМЕНИ ====================
     setupKeyboard() {
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && this.isEditorMode && 
@@ -416,12 +507,11 @@ App.Editor = {
             e.preventDefault();
             const index = parseInt(lineEl.dataset.index);
 
-            // Простое контекстное меню через confirm
             if (this.lastTimestamp !== null) {
                 if (confirm(`Привязать метку ${App.Parser.formatTime(this.lastTimestamp)} к строке ${index + 1}?`)) {
                     App.Store.lines[index].time = this.lastTimestamp;
                     App.Store.setLines([...App.Store.lines]);
-                    App.UIManager.showNotification('Метка привязана!', 'success');
+                    this.showNotification('Метка привязана!', 'success');
                 }
             }
         });
@@ -437,9 +527,16 @@ App.Editor = {
         this.lastTimestamp = finalTime;
 
         App.EventBus.emit('editor:mark-added', { time: finalTime });
-        App.Waveform.addTimestampMark(finalTime);
+        
+        // Добавляем метку на waveform
+        const waveformInstance = this.waveform || (App.Waveform && App.Waveform.instance);
+        if (waveformInstance && typeof waveformInstance.addTimestampMark === 'function') {
+            waveformInstance.addTimestampMark(finalTime);
+        } else if (App.Waveform && typeof App.Waveform.addTimestampMark === 'function') {
+            App.Waveform.addTimestampMark(finalTime);
+        }
 
-        App.UIManager.showNotification(`📍 Метка: ${App.Parser.formatTime(finalTime)}`, 'success');
+        this.showNotification(`📍 Метка: ${App.Parser.formatTime(finalTime)}`, 'success');
     },
 
     findNearestSilence(clickTime) {
@@ -449,9 +546,13 @@ App.Editor = {
 
     toggleMagnet() {
         this.magnetEnabled = !this.magnetEnabled;
-        App.UIManager.showNotification(this.magnetEnabled ? '🔗 Магнит вкл' : '🔗 Магнит выкл');
+        this.showNotification(
+            this.magnetEnabled ? '🔗 Магнит включён' : '🔗 Магнит выключен',
+            'success'
+        );
     },
 
+    // ==================== ЭКСПОРТ ====================
     exportLyrics() {
         const text = App.Parser.exportToText(App.Store.lines);
         const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -461,5 +562,18 @@ App.Editor = {
         a.download = 'karaoke_lyrics.txt';
         a.click();
         URL.revokeObjectURL(url);
+        this.showNotification('✅ Файл сохранён', 'success');
+    },
+
+    // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+    showNotification(message, type = 'info') {
+        if (App.UIManager && typeof App.UIManager.showNotification === 'function') {
+            App.UIManager.showNotification(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+            if (type === 'error') {
+                alert(message);
+            }
+        }
     }
 };
